@@ -22,6 +22,7 @@
       // EDITED: Only apply cross-origin isolation to specified paths
       const url = new URL(r.url);
       const shouldIsolate = isolatedPaths.some(path => url.pathname.startsWith(path));
+      console.log(url.pathname);
       
       e.respondWith(fetch(r).then(r => {
         const { body, status, statusText } = r;
