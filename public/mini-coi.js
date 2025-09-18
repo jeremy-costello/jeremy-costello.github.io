@@ -3,7 +3,7 @@
 /*! EDITED: Modified to only apply cross-origin isolation to specific paths */
 (({ document: d, navigator: { serviceWorker: s } }) => {
   // Configure which paths should have cross-origin isolation
-  const isolatedPaths = ['/chat', '/search'];
+  const isolatedPaths = ['/chat', '/search', '/assets', '/wllama'];
   
   if (d) {
     const { currentScript: c } = d;
