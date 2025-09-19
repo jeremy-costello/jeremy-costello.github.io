@@ -1,12 +1,45 @@
 // App.tsx
-import { BrowserRouter as Router } from "react-router-dom";
-import { useMemo, useState } from "react";
+import { BrowserRouter as Router, useLocation } from "react-router-dom";
+import { useMemo, useState, useEffect } from "react";
 import { ThemeProvider } from "@mui/material/styles";
 import CssBaseline from "@mui/material/CssBaseline";
 import { getTheme } from "./theme";
 
 import Layout from "./components/layout/Layout";
 import { NavigationRoutes } from "./components/navigation/Navigation";
+
+function CrossOriginIsolation() {
+  const location = useLocation();
+
+  useEffect(() => {
+    if ("serviceWorker" in navigator) {
+      const path = location.pathname;
+
+      // Configure coi-serviceworker
+      (window as any).coi = {
+        shouldRegister: () =>
+          (path.startsWith("/chat") || path.startsWith("/search")),
+        // Deregister if not on chat/search
+        shouldDeregister: () =>
+          !(path.startsWith("/chat") || path.startsWith("/search")),
+        coepCredentialless: () => true,
+        coepDegrade: () => true,
+        quiet: false,
+      };
+
+      // Dynamically load the script
+      const scriptId = "coi-sw-script";
+      if (!document.getElementById(scriptId)) {
+        const script = document.createElement("script");
+        script.id = scriptId;
+        script.src = "/coi-serviceworker.js";
+        document.head.appendChild(script);
+      }
+    }
+  }, [location.pathname]);
+
+  return null;
+}
 
 function App() {
   const [mode, setMode] = useState<"light" | "dark">(() => {
@@ -37,6 +70,9 @@ function App() {
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <Router>
+        {/* Cross-origin isolation handler */}
+        <CrossOriginIsolation />
+
         <Layout
           toggleTheme={toggleTheme}
           backgroundImage={selectedBackground}

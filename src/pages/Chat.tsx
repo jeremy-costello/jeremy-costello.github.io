@@ -29,6 +29,7 @@ const Chat = () => {
   const [checkingLocal, setCheckingLocal] = useState(true);
   const [llmProgress, setLLMProgress] = useState<number | null>(null);
   const [embedderProgress, setEmbedderProgress] = useState<number | null>(null);
+  const [sharedArrayBufferAvailable, setSharedArrayBufferAvailable] = useState(true);
 
   const chatModelResolveUrl = `https://huggingface.co/${CHAT_MODEL_REPO}/resolve/main/${CHAT_MODEL_FILE}`;
   const chatModelBlobUrl = `https://huggingface.co/${CHAT_MODEL_REPO}/blob/main/${CHAT_MODEL_FILE}`;
@@ -40,6 +41,11 @@ const Chat = () => {
   };
 
   useEffect(() => {
+    if (typeof window.SharedArrayBuffer === "undefined") {
+      setSharedArrayBufferAvailable(false);
+      return; // stop everything else
+    }
+
     const checkModels = async () => {
       try {
         const manager = new ModelManager({ allowOffline: true });
@@ -86,6 +92,34 @@ const Chat = () => {
       setIsLoading(false);
     }
   };
+
+  // 🚨 Block everything if SharedArrayBuffer isn't available
+  if (!sharedArrayBufferAvailable) {
+    return (
+      <PageHeader title="Cross-Origin Isolation Required">
+        <Box sx={{ p: 4, textAlign: 'center', maxWidth: 600, margin: 'auto' }}>
+          <Typography variant="h5" gutterBottom>
+            ⚠️ SharedArrayBuffer Not Available
+          </Typography>
+          <Typography variant="body1" paragraph>
+            This page requires <code>SharedArrayBuffer</code> for correct operation.
+            <br />
+            Please refresh the page to enable cross-origin isolation.
+          </Typography>
+
+          <Box sx={{ mt: 3 }}>
+            <Button
+              variant="contained"
+              color="primary"
+              onClick={() => window.location.reload()}
+            >
+              Refresh Page
+            </Button>
+          </Box>
+        </Box>
+      </PageHeader>
+    );
+  }
 
   if (checkingLocal) {
     return (
@@ -153,27 +187,18 @@ const Chat = () => {
     <PageHeader title="RAG Chat">
       <Grid container spacing={0}>
         <Grid
-          size={{
-            xs: 12,
-            md: 8
-          }}
+          size={{ xs: 12, md: 8 }}
           sx={{
             height: isMobile ? 'calc(100vh - 264px)' : 'calc(100vh - 184px)',
             display: 'flex',
             flexDirection: 'column'
           }}
         >
-          <ChatContainer
-            onArticlesChange={handleArticlesChange}
-            cachedArticles={cachedArticles}
-          />
+          <ChatContainer onArticlesChange={handleArticlesChange} cachedArticles={cachedArticles} />
         </Grid>
 
         <Grid
-          size={{
-            xs: 12,
-            md: 4
-          }}
+          size={{ xs: 12, md: 4 }}
           sx={{
             height: isMobile ? 'calc(100vh - 264px)' : 'calc(100vh - 184px)',
             display: { xs: 'none', md: 'flex' },

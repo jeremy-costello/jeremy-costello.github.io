@@ -15,12 +15,21 @@ const Search = () => {
   const [isInitialized, setIsInitialized] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [embedderProgress, setEmbedderProgress] = useState<number | null>(null);
-  const [checkingLocal, setCheckingLocal] = useState(true); // to avoid flashing init screen
+  const [checkingLocal, setCheckingLocal] = useState(true);
+  const [sharedArrayBufferAvailable, setSharedArrayBufferAvailable] = useState(true);
+  const [forceContinue, setForceContinue] = useState(false);
+
   const embeddingModelFilename = EMBED_MODEL_FILE;
   const embeddingModelResolveUrl = `https://huggingface.co/${EMBED_MODEL_REPO}/resolve/main/${embeddingModelFilename}`;
   const embeddingModelBlobUrl = `https://huggingface.co/${EMBED_MODEL_REPO}/blob/main/${embeddingModelFilename}`;
 
   useEffect(() => {
+    // Check SharedArrayBuffer availability
+    if (typeof window.SharedArrayBuffer === "undefined") {
+      setSharedArrayBufferAvailable(false);
+      return; // stop early — user must refresh or continue without
+    }
+
     const checkModelDownloaded = async () => {
       try {
         const manager = new ModelManager({ allowOffline: true });
@@ -29,7 +38,7 @@ const Search = () => {
 
         if (isModelPresent) {
           await initDB();
-          await initEmbedder(); // safe to call again — it’s idempotent
+          await initEmbedder(); // safe to call again — idempotent
           setIsInitialized(true);
         }
       } catch (err) {
@@ -57,6 +66,41 @@ const Search = () => {
       setIsLoading(false);
     }
   };
+
+  // If SharedArrayBuffer is not available and user hasn't chosen to continue
+  if (!sharedArrayBufferAvailable && !forceContinue) {
+    return (
+      <PageHeader title="Cross-Origin Isolation Required">
+        <Box sx={{ p: 4, textAlign: 'center', maxWidth: 600, margin: 'auto' }}>
+          <Typography variant="h5" gutterBottom>
+            ⚠️ SharedArrayBuffer Not Available
+          </Typography>
+          <Typography variant="body1" paragraph>
+            This page works best when <code>SharedArrayBuffer</code> is available.
+            <br />
+            Please refresh the page to enable cross-origin isolation and unlock full performance.
+          </Typography>
+
+          <Box sx={{ mt: 3, display: 'flex', gap: 2, justifyContent: 'center' }}>
+            <Button
+              variant="contained"
+              color="primary"
+              onClick={() => window.location.reload()}
+            >
+              Refresh (Recommended)
+            </Button>
+            <Button
+              variant="outlined"
+              color="secondary"
+              onClick={() => setForceContinue(true)}
+            >
+              Continue Anyway
+            </Button>
+          </Box>
+        </Box>
+      </PageHeader>
+    );
+  }
 
   // Still checking local model cache
   if (checkingLocal) {
