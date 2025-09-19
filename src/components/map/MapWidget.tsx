@@ -30,7 +30,7 @@ const MapWidget: React.FC<MapSectionProps> = ({ is3D }) => {
         if (!viewerInitialized.current && !viewerRef.current) {
           viewerInitialized.current = true;
 
-          Ion.defaultAccessToken = Ion.defaultAccessToken;
+          Ion.defaultAccessToken = import.meta.env.VITE_CESIUM_ION_TOKEN;
 
           viewerRef.current = await getCesiumViewer(cesiumContainerRef.current);
         }
