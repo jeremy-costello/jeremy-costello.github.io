@@ -17,7 +17,6 @@ const Search = () => {
   const [embedderProgress, setEmbedderProgress] = useState<number | null>(null);
   const [checkingLocal, setCheckingLocal] = useState(true);
   const [sharedArrayBufferAvailable, setSharedArrayBufferAvailable] = useState(true);
-  const [forceContinue, setForceContinue] = useState(false);
 
   const embeddingModelFilename = EMBED_MODEL_FILE;
   const embeddingModelResolveUrl = `https://huggingface.co/${EMBED_MODEL_REPO}/resolve/main/${embeddingModelFilename}`;
@@ -67,8 +66,8 @@ const Search = () => {
     }
   };
 
-  // If SharedArrayBuffer is not available and user hasn't chosen to continue
-  if (!sharedArrayBufferAvailable && !forceContinue) {
+  // 🚨 Block everything if SharedArrayBuffer isn't available
+  if (!sharedArrayBufferAvailable) {
     return (
       <PageHeader title="Cross-Origin Isolation Required">
         <Box sx={{ p: 4, textAlign: 'center', maxWidth: 600, margin: 'auto' }}>
@@ -76,25 +75,18 @@ const Search = () => {
             ⚠️ SharedArrayBuffer Not Available
           </Typography>
           <Typography variant="body1" paragraph>
-            This page works best when <code>SharedArrayBuffer</code> is available.
+            This page requires <code>SharedArrayBuffer</code> for correct operation.
             <br />
-            Please refresh the page to enable cross-origin isolation and unlock full performance.
+            Please refresh the page to enable cross-origin isolation.
           </Typography>
 
-          <Box sx={{ mt: 3, display: 'flex', gap: 2, justifyContent: 'center' }}>
+          <Box sx={{ mt: 3 }}>
             <Button
               variant="contained"
               color="primary"
               onClick={() => window.location.reload()}
             >
-              Refresh (Recommended)
-            </Button>
-            <Button
-              variant="outlined"
-              color="secondary"
-              onClick={() => setForceContinue(true)}
-            >
-              Continue Anyway
+              Refresh Page
             </Button>
           </Box>
         </Box>
